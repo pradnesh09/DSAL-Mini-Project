@@ -1,1 +1,423 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+/* ---------------------------------------------------------
+   Structure for one book node
+   --------------------------------------------------------- */
+
+typedef struct Book
+{
+    char bookName[100];
+    char authorName[100];
+    float price;
+    int copies;
+
+    struct Book *next;
+} Book;
+
+
+/* ---------------------------------------------------------
+   Function to clear input buffer
+   --------------------------------------------------------- */
+
+void clearInputBuffer()
+{
+    int ch;
+
+    while ((ch = getchar()) != '\n' && ch != EOF)
+    {
+        // Remove extra characters from input buffer
+    }
+}
+
+
+/* ---------------------------------------------------------
+   Function to remove newline from fgets()
+   --------------------------------------------------------- */
+
+void removeNewline(char str[])
+{
+    str[strcspn(str, "\n")] = '\0';
+}
+
+
+/* ---------------------------------------------------------
+   Function to create a new Book node
+   --------------------------------------------------------- */
+
+Book *createBook()
+{
+    Book *newBook;
+
+    /* Dynamic memory allocation */
+    newBook = (Book *)malloc(sizeof(Book));
+
+    if (newBook == NULL)
+    {
+        printf("\nMemory allocation failed.\n");
+        exit(1);
+    }
+
+    printf("\nEnter Book Name: ");
+    fgets(newBook->bookName, sizeof(newBook->bookName), stdin);
+    removeNewline(newBook->bookName);
+
+    printf("Enter Author Name: ");
+    fgets(newBook->authorName, sizeof(newBook->authorName), stdin);
+    removeNewline(newBook->authorName);
+
+    printf("Enter Price: ");
+    scanf("%f", &newBook->price);
+    clearInputBuffer();
+
+    printf("Enter Number of Copies: ");
+    scanf("%d", &newBook->copies);
+    clearInputBuffer();
+
+    /* New node initially does not point to another node */
+    newBook->next = NULL;
+
+    return newBook;
+}
+
+
+/* ---------------------------------------------------------
+   1. ADD BOOK
+   Insert new node at the end of singly linked list
+   --------------------------------------------------------- */
+
+void addBook(Book **head)
+{
+    Book *newBook;
+    Book *temp;
+
+    newBook = createBook();
+
+    /* If list is empty */
+    if (*head == NULL)
+    {
+        *head = newBook;
+
+        printf("\nBook added successfully.\n");
+
+        return;
+    }
+
+    /* Traverse to the last node */
+    temp = *head;
+
+    while (temp->next != NULL)
+    {
+        temp = temp->next;
+    }
+
+    /* Connect last node with new node */
+    temp->next = newBook;
+
+    printf("\nBook added successfully.\n");
+}
+
+
+/* ---------------------------------------------------------
+   Function to display one book
+   --------------------------------------------------------- */
+
+void displaySingleBook(Book *book)
+{
+    printf("\n----------------------------------------\n");
+    printf("Book Name       : %s\n", book->bookName);
+    printf("Author Name     : %s\n", book->authorName);
+    printf("Price           : %.2f\n", book->price);
+    printf("Available Copies: %d\n", book->copies);
+    printf("----------------------------------------\n");
+}
+
+
+/* ---------------------------------------------------------
+   2. DISPLAY ALL BOOKS
+   Traversal of linked list
+   --------------------------------------------------------- */
+
+void displayBooks(Book *head)
+{
+    Book *temp;
+    int count = 1;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    temp = head;
+
+    printf("\n========== LIBRARY CATALOGUE ==========\n");
+
+    while (temp != NULL)
+    {
+        printf("\nBook %d", count);
+
+        displaySingleBook(temp);
+
+        temp = temp->next;
+
+        count++;
+    }
+}
+
+
+/* ---------------------------------------------------------
+   3. SEARCH BOOK BY TITLE
+   Linear Search
+   --------------------------------------------------------- */
+
+void searchByTitle(Book *head)
+{
+    char title[100];
+    Book *temp;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    printf("\nEnter Book Name to Search: ");
+    fgets(title, sizeof(title), stdin);
+    removeNewline(title);
+
+    temp = head;
+
+    /* Linear traversal */
+    while (temp != NULL)
+    {
+        if (strcmp(temp->bookName, title) == 0)
+        {
+            printf("\nBook found.\n");
+
+            displaySingleBook(temp);
+
+            return;
+        }
+
+        temp = temp->next;
+    }
+
+    printf("\nBook not found.\n");
+}
+
+
+/* ---------------------------------------------------------
+   4. SEARCH BOOKS BY AUTHOR
+   Displays all books written by given author
+   --------------------------------------------------------- */
+
+void searchByAuthor(Book *head)
+{
+    char author[100];
+    Book *temp;
+    int found = 0;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    printf("\nEnter Author Name to Search: ");
+    fgets(author, sizeof(author), stdin);
+    removeNewline(author);
+
+    temp = head;
+
+    printf("\nBooks by %s:\n", author);
+
+    while (temp != NULL)
+    {
+        if (strcmp(temp->authorName, author) == 0)
+        {
+            displaySingleBook(temp);
+
+            found = 1;
+        }
+
+        temp = temp->next;
+    }
+
+    if (found == 0)
+    {
+        printf("\nNo books found for this author.\n");
+    }
+}
+
+
+/* ---------------------------------------------------------
+   5. DELETE BOOK
+   Deletes node using current and previous pointers
+   --------------------------------------------------------- */
+
+void deleteBook(Book **head)
+{
+    char title[100];
+
+    Book *current;
+    Book *previous;
+
+    if (*head == NULL)
+    {
+        printf("\nLibrary is empty. Nothing to delete.\n");
+
+        return;
+    }
+
+    printf("\nEnter Book Name to Delete: ");
+    fgets(title, sizeof(title), stdin);
+    removeNewline(title);
+
+    current = *head;
+    previous = NULL;
+
+    /* Search for required node */
+    while (current != NULL)
+    {
+        if (strcmp(current->bookName, title) == 0)
+        {
+            break;
+        }
+
+        previous = current;
+        current = current->next;
+    }
+
+    /* Book not found */
+    if (current == NULL)
+    {
+        printf("\nBook not found.\n");
+
+        return;
+    }
+
+    /*
+       If first node is being deleted
+       move head to second node.
+    */
+
+    if (previous == NULL)
+    {
+        *head = current->next;
+    }
+    else
+    {
+        /*
+           Bypass the node that has to be deleted.
+        */
+
+        previous->next = current->next;
+    }
+
+    /* Release dynamically allocated memory */
+    free(current);
+
+    printf("\nBook deleted successfully.\n");
+}
+
+
+/* ---------------------------------------------------------
+   6. FREE COMPLETE LINKED LIST
+   Releases all dynamically allocated nodes
+   --------------------------------------------------------- */
+
+void freeLibrary(Book **head)
+{
+    Book *temp;
+
+    while (*head != NULL)
+    {
+        temp = *head;
+
+        *head = (*head)->next;
+
+        free(temp);
+    }
+}
+
+
+/* ---------------------------------------------------------
+   MAIN FUNCTION
+   --------------------------------------------------------- */
+
+int main()
+{
+    Book *head = NULL;
+
+    int choice;
+
+    do
+    {
+        printf("\n");
+        printf("========================================\n");
+        printf("      LIBRARY MANAGEMENT SYSTEM\n");
+        printf("========================================\n");
+
+        printf("1. Add Book\n");
+        printf("2. Display All Books\n");
+        printf("3. Search by Book Name\n");
+        printf("4. Search by Author\n");
+        printf("5. Delete Book\n");
+        printf("6. Exit\n");
+
+        printf("========================================\n");
+
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        clearInputBuffer();
+
+        switch (choice)
+        {
+            case 1:
+                addBook(&head);
+                break;
+
+            case 2:
+                displayBooks(head);
+                break;
+
+            case 3:
+                searchByTitle(head);
+                break;
+
+            case 4:
+                searchByAuthor(head);
+                break;
+
+            case 5:
+                deleteBook(&head);
+                break;
+
+            case 6:
+
+                /*
+                   Release all dynamically allocated
+                   memory before terminating program.
+                */
+
+                freeLibrary(&head);
+
+                printf("\nAll allocated memory released.\n");
+                printf("Exiting Library Management System...\n");
+
+                break;
+
+            default:
+                printf("\nInvalid choice. Please enter 1 to 6.\n");
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
