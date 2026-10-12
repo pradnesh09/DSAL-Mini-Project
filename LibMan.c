@@ -1,0 +1,326 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct Book
+{
+    char bookName[100];
+    char authorName[100];
+    float price;
+    int copies;
+    struct Book *next;
+} Book;
+
+void clearInputBuffer()
+{
+    int ch;
+
+    while ((ch = getchar()) != '\n' && ch != EOF)
+    {
+    }
+}
+
+void removeNewline(char str[])
+{
+    str[strcspn(str, "\n")] = '\0';
+}
+
+Book *createBook()
+{
+    Book *newBook = (Book *)malloc(sizeof(Book));
+
+    if (newBook == NULL)
+    {
+        printf("\nMemory allocation failed.\n");
+        exit(1);
+    }
+
+    printf("\nEnter Book Name: ");
+    fgets(newBook->bookName, sizeof(newBook->bookName), stdin);
+    removeNewline(newBook->bookName);
+
+    printf("Enter Author Name: ");
+    fgets(newBook->authorName, sizeof(newBook->authorName), stdin);
+    removeNewline(newBook->authorName);
+
+    printf("Enter Price: ");
+    scanf("%f", &newBook->price);
+    clearInputBuffer();
+
+    printf("Enter Number of Copies: ");
+    scanf("%d", &newBook->copies);
+    clearInputBuffer();
+
+    newBook->next = NULL;
+
+    return newBook;
+}
+
+void addBook(Book **head)
+{
+    Book *newBook = createBook();
+    Book *temp;
+
+    if (*head == NULL)
+    {
+        *head = newBook;
+
+        printf("\nBook added successfully.\n");
+
+        return;
+    }
+
+    temp = *head;
+
+    while (temp->next != NULL)
+    {
+        temp = temp->next;
+    }
+
+    temp->next = newBook;
+
+    printf("\nBook added successfully.\n");
+}
+
+void displaySingleBook(Book *book)
+{
+    printf("\n----------------------------------------\n");
+    printf("Book Name       : %s\n", book->bookName);
+    printf("Author Name     : %s\n", book->authorName);
+    printf("Price           : %.2f\n", book->price);
+    printf("Available Copies: %d\n", book->copies);
+    printf("----------------------------------------\n");
+}
+
+void displayBooks(Book *head)
+{
+    Book *temp;
+    int count = 1;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    temp = head;
+
+    printf("\n========== LIBRARY CATALOGUE ==========\n");
+
+    while (temp != NULL)
+    {
+        printf("\nBook %d", count);
+
+        displaySingleBook(temp);
+
+        temp = temp->next;
+
+        count++;
+    }
+}
+
+void searchByTitle(Book *head)
+{
+    char title[100];
+    Book *temp;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    printf("\nEnter Book Name to Search: ");
+    fgets(title, sizeof(title), stdin);
+    removeNewline(title);
+
+    temp = head;
+
+    while (temp != NULL)
+    {
+        if (strcmp(temp->bookName, title) == 0)
+        {
+            printf("\nBook found.\n");
+
+            displaySingleBook(temp);
+
+            return;
+        }
+
+        temp = temp->next;
+    }
+
+    printf("\nBook not found.\n");
+}
+
+void searchByAuthor(Book *head)
+{
+    char author[100];
+    Book *temp;
+    int found = 0;
+
+    if (head == NULL)
+    {
+        printf("\nLibrary is empty.\n");
+
+        return;
+    }
+
+    printf("\nEnter Author Name to Search: ");
+    fgets(author, sizeof(author), stdin);
+    removeNewline(author);
+
+    temp = head;
+
+    printf("\nBooks by %s:\n", author);
+
+    while (temp != NULL)
+    {
+        if (strcmp(temp->authorName, author) == 0)
+        {
+            displaySingleBook(temp);
+
+            found = 1;
+        }
+
+        temp = temp->next;
+    }
+
+    if (found == 0)
+    {
+        printf("\nNo books found for this author.\n");
+    }
+}
+
+void deleteBook(Book **head)
+{
+    char title[100];
+
+    Book *current;
+    Book *previous;
+
+    if (*head == NULL)
+    {
+        printf("\nLibrary is empty. Nothing to delete.\n");
+
+        return;
+    }
+
+    printf("\nEnter Book Name to Delete: ");
+    fgets(title, sizeof(title), stdin);
+    removeNewline(title);
+
+    current = *head;
+    previous = NULL;
+
+    while (current != NULL)
+    {
+        if (strcmp(current->bookName, title) == 0)
+        {
+            break;
+        }
+
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        printf("\nBook not found.\n");
+
+        return;
+    }
+
+    if (previous == NULL)
+    {
+        *head = current->next;
+    }
+    else
+    {
+        previous->next = current->next;
+    }
+
+    free(current);
+
+    printf("\nBook deleted successfully.\n");
+}
+
+void freeLibrary(Book **head)
+{
+    Book *temp;
+
+    while (*head != NULL)
+    {
+        temp = *head;
+
+        *head = (*head)->next;
+
+        free(temp);
+    }
+}
+
+int main()
+{
+    Book *head = NULL;
+
+    int choice;
+
+    do
+    {
+        printf("\n");
+        printf("========================================\n");
+        printf("      LIBRARY MANAGEMENT SYSTEM\n");
+        printf("========================================\n");
+        printf("1. Add Book\n");
+        printf("2. Display All Books\n");
+        printf("3. Search by Book Name\n");
+        printf("4. Search by Author\n");
+        printf("5. Delete Book\n");
+        printf("6. Exit\n");
+        printf("========================================\n");
+
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        clearInputBuffer();
+
+        switch (choice)
+        {
+            case 1:
+                addBook(&head);
+                break;
+
+            case 2:
+                displayBooks(head);
+                break;
+
+            case 3:
+                searchByTitle(head);
+                break;
+
+            case 4:
+                searchByAuthor(head);
+                break;
+
+            case 5:
+                deleteBook(&head);
+                break;
+
+            case 6:
+                freeLibrary(&head);
+
+                printf("\nAll allocated memory released.\n");
+                printf("Exiting Library Management System...\n");
+
+                break;
+
+            default:
+                printf("\nInvalid choice. Please enter 1 to 6.\n");
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
